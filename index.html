@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <style>
+        body {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+    </style>
+</head>
+<body>
+
+<canvas id="blocks"></canvas>
+<script>
+    var colors = ['#F5E9E2' , '#FAEAD8' , '#FAF3D8' , '#E8F2DC' , '#E0ECEA' , '#E4EBF1' , '#E4E7F2' , '#EDE5F0' , '#F5E9E2' , '#FAEAD8'  ];
+    var blocks = document.getElementById('blocks');
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    blocks.width = width , blocks.height = height;
+    var step = 0 , clck = { point: 50, color: colors[0] }, timeout
+
+    var ctx = blocks.getContext('2d');
+    ctx.beginPath();
+    ctx.rect(0, 0, width, height);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+    var tmp = {current: new Array(height), next: new Array(height), counter: width};
+    var draw = function () {
+        for (var i = 0; i < height; i++) {
+            if (clck !== null && i == clck.point) {
+                tmp.next[i] = {step: step, color: clck.color};
+                clck = null;
+            } else {
+                if (typeof tmp.current[i] != 'undefined') {
+                    if (i > 0) {
+                        if (!tmp.next[i - 1] || tmp.next[i - 1].step < tmp.current[i].step) {
+                            tmp.next[i - 1] = {step: tmp.current[i].step, color: tmp.current[i].color}
+                        }
+                    }
+                    if (i < height) {
+                        if (!tmp.next[i + 1] || tmp.next[i + 1].step < tmp.current[i].step) {
+                            tmp.next[i + 1] = {step: tmp.current[i].step, color: tmp.current[i].color}
+                        }
+                    }
+                    if (!tmp.next[i] || tmp.next[i].step < tmp.current[i].step) {
+                        tmp.next[i] = {step: tmp.current[i].step, color: tmp.current[i].color}
+                    }
+                }
+            }
+        }
+        tmp.img = ctx.getImageData(0, 0, width - 1, height)
+        ctx.putImageData(tmp.img, 1, 0);
+        for (var i = 0; i < height; i++) {
+            if (typeof tmp.current[i] != "undefined") {
+                ctx.fillStyle = tmp.current[i].color
+                ctx.fillRect(0, i, 1, 1);
+            }
+        }
+
+        tmp.current = tmp.next;
+        tmp.next = new Array(height)
+        if (0 === tmp.counter) {
+            clearInterval(timeout);
+        } else if (1 === tmp.counter) {
+            step++;
+            tmp.clck = Math.floor(Math.random() * 300)
+            clck = { point: tmp.clck, color: colors[step % 10] };
+            tmp.counter = width + Math.max(tmp.clck, height - tmp.clck);
+        } else {
+            tmp.counter -= 1;
+        }
+    }
+
+    timeout = setInterval(draw, 50)
+    blocks.onclick = function (e) {
+        step++;
+        clck = { point: e.offsetY, color: colors[step % 10] };
+        tmp.counter = width + Math.max(e.offsetY, height - e.offsetY);
+        clearInterval(timeout);
+        timeout = setInterval(draw, 50)
+    }
+</script>
+</body>
+</html>
